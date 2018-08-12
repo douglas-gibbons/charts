@@ -1,0 +1,63 @@
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  name: {{ template "taiga.fullname" . }}-frontend
+  labels:
+    app: {{ template "taiga.name" . }}
+    chart: {{ template "taiga.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.events.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ template "taiga.name" . }}-frontend
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ template "taiga.name" . }}-frontend
+        release: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: {{ .Chart.Name }}-frontend
+          image: "{{ .Values.frontend.image.repository }}:{{ .Values.frontend.image.tag }}"
+          imagePullPolicy: {{ .Values.frontend.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 80
+          securityContext:
+            runAsUser: 100
+            fsGroup: 101
+          env:
+            - name: TAIGA_DEBUG
+              value: {{ .Values.djangoDebug | quote }}
+            - name: TAIGA_API_URL
+              value: {{ .Values.backendUrl | quote }}
+            - name: TAIGA_EVENTS_URL
+              value: {{ .Values.eventsUrl | quote }}
+            - name: TAIGA_PUBLIC_REGISTER_ENABLED
+              value: {{ .Values.taiga.publicRegister | quote }}
+            - name: DEFAULT_LANGUAGE
+              value: {{ .Values.taiga.defaultLanguage | quote }}
+            - name: USE_GITLAB
+              value: {{ .Values.gitlab.enabled | quote }}
+            - name: GITLAB_URL
+              value: {{ .Values.gitlab.url | quote }}
+            - name: GITLAB_CLIENT_ID
+              value: {{ .Values.gitlab.cilentId | quote }}
+
+          resources:
+{{ toYaml .Values.events.resources | indent 12 }}
+    {{- with .Values.events.nodeSelector }}
+      nodeSelector:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.events.affinity }}
+      affinity:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.events.tolerations }}
+      tolerations:
+{{ toYaml . | indent 8 }}
+    {{- end }}

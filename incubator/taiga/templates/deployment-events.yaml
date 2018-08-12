@@ -1,0 +1,51 @@
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  name: {{ template "taiga.fullname" . }}-events
+  labels:
+    app: {{ template "taiga.name" . }}
+    chart: {{ template "taiga.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.events.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ template "taiga.name" . }}-events
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ template "taiga.name" . }}-events
+        release: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: {{ .Chart.Name }}-events
+          image: "{{ .Values.events.image.repository }}:{{ .Values.events.image.tag }}"
+          imagePullPolicy: {{ .Values.events.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8888
+          env:
+            - name: TAIGA_SECRET
+              value: {{ .Values.taiga.secret  | quote }}
+            - name: RABBITMQ_HOST
+              value: {{ template "taiga.fullname" . }}-rabbitmq
+            - name: RABBITMQ_USER
+              value: {{ .Values.rabbitmq.username  | quote }}
+            - name: RABBITMQ_PASS
+              value: {{ .Values.rabbitmq.password  | quote }}
+          resources:
+{{ toYaml .Values.events.resources | indent 12 }}
+    {{- with .Values.events.nodeSelector }}
+      nodeSelector:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.events.affinity }}
+      affinity:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.events.tolerations }}
+      tolerations:
+{{ toYaml . | indent 8 }}
+    {{- end }}

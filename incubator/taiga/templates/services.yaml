@@ -1,0 +1,61 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "taiga.fullname" . }}-frontend
+  labels:
+    app: {{ template "taiga.name" . }}-frontend
+    chart: {{ template "taiga.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  type: {{ .Values.frontend.service.type }}
+  ports:
+    - port: 80
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app: {{ template "taiga.name" . }}-frontend
+    release: {{ .Release.Name }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  # services name (currently) hard-coded into frontend container NGINX configuration
+  name: backend
+  labels:
+    app: {{ template "taiga.name" . }}-backend
+    chart: {{ template "taiga.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  type: {{ .Values.backend.service.type }}
+  ports:
+    - port: 8000
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app: {{ template "taiga.name" . }}-backend
+    release: {{ .Release.Name }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  # services name (currently) hard-coded into frontend container NGINX configuration
+  name: events
+  labels:
+    app: {{ template "taiga.name" . }}-events
+    chart: {{ template "taiga.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  type: {{ .Values.events.service.type }}
+  ports:
+    - port: 8888
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app: {{ template "taiga.name" . }}-events
+    release: {{ .Release.Name }}
